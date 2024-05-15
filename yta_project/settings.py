@@ -32,7 +32,6 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'bootstrap5',
     'yta_app',
     'django.contrib.admin',
     'django.contrib.auth',

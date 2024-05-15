@@ -1,38 +1,34 @@
 import os
-import pdb
 import re
 from pytube import YouTube
-from moviepy.editor import *
+from moviepy.editor import AudioFileClip
 from django.conf import settings
 
-dir_path = os.path.dirname(os.path.realpath(__file__))
 
 class YoutubeToAudio:
     def __init__(self, url):
-        self.title = ''
         self.url = url
 
-    def youtube_to_mp4(self):
+    def convert_to_audio(self):
         yt = YouTube(self.url)
+        title = self._clean_title(yt.title)
+        mp4_file = self._download_mp4(title)
+        mp3_file = self._convert_to_mp3(mp4_file)
+        return mp3_file
 
-        self.title = yt.title
-        self.title = re.sub(r'[^\w]', '', self.title)
-        self.title = self.title.replace(' ', '')
-        
-        yt_audio = yt.streams.get_audio_only(subtype='mp4')
-        yt_audio.download(output_path=settings.MEDIA_ROOT, filename=self.title + ".mp4")
+    def _clean_title(self, title):
+        return re.sub(r'[^\w]', '', title).replace(' ', '')
 
-    def MP4ToMP3(self):
-        FILETOCONVERT = AudioFileClip(settings.MEDIA_ROOT + "\\" + self.title + ".mp4")
-        FILETOCONVERT.write_audiofile(settings.MEDIA_ROOT + "\\" + self.title + ".mp3")
-        FILETOCONVERT.close()
-        os.remove(settings.MEDIA_ROOT + "\\" + self.title + ".mp4")
+    def _download_mp4(self, title):
+        yt_audio = YouTube(self.url).streams.get_audio_only(subtype='mp4')
+        filename = os.path.join(settings.MEDIA_ROOT, title + ".mp4")
+        yt_audio.download(output_path=settings.MEDIA_ROOT, filename=filename)
+        return filename
 
-        import base64
-
-        with open(settings.MEDIA_ROOT + "\\" + self.title + ".mp3", 'rb') as binary_file:
-            binary_file_data = binary_file.read()
-            base64_encoded_data = base64.b64encode(binary_file_data)
-            base64_output = base64_encoded_data.decode('utf-8')
-
-            print(base64_output)
+    def _convert_to_mp3(self, mp4_file):
+        mp3_file = mp4_file.replace(".mp4", ".mp3")
+        clip = AudioFileClip(mp4_file)
+        clip.write_audiofile(mp3_file)
+        clip.close()
+        os.remove(mp4_file)
+        return os.path.basename(mp3_file)
