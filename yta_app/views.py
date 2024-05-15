@@ -1,11 +1,9 @@
-import pdb
 from .youtube_to_audio import YoutubeToAudio
 from django.shortcuts import render
 
 
 def index(request):
     if request.method == 'POST':
-        pdb.set_trace()
         url = request.POST.get('url')
         if url:
             yta = YoutubeToAudio(url)
